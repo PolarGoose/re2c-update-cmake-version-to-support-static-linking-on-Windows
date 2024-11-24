@@ -1,0 +1,28 @@
+name: Build static binaries
+
+on: push
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            buildStep: build/build_statically_linked_Linux_binary.sh
+            resultedExecutableName: .build_static_Linux_binary/re2c
+          - os: windows-latest
+            buildStep: build/build_statically_linked_Windows_binary.ps1
+            resultedExecutableName: .build_static_Windows_binary/re2c.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Enable long paths on Windows
+        if: runner.os == 'Windows'
+        run: git config --system core.longpaths true
+      - uses: actions/checkout@v4
+      - name: Build executable
+        run: ${{ matrix.buildStep }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.os }}_statically_linked_executable
+          path: ${{ matrix.resultedExecutableName }}
